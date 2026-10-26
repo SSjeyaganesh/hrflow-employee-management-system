@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends
-from app.database import Base, engine, get_db
+from app.database import Base, engine
 from app import models, schemas
 from app.auth.routes import router as auth_router
+from app.employees.routes import router as employee_router
 from app.auth.dependencies import get_current_user
 
 app = FastAPI(
@@ -15,6 +16,7 @@ def create_tables():
     Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router)
+app.include_router(employee_router)
 
 
 @app.get("/")

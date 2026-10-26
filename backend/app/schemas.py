@@ -44,3 +44,13 @@ class EmployeeOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+class EmployeeUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    department_id: Optional[int] = None
+    designation: Optional[str] = None
+    joining_date: Optional[date] = None
+    status: Optional[str] = None
