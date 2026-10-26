@@ -108,3 +108,14 @@ class AttendanceSummary(BaseModel):
     present_days: int
     absent_days: int
     leave_days: int
+
+class DashboardStats(BaseModel):
+    total_employees: int
+    active_employees: int
+    total_departments: int
+    pending_leaves: int
+    approved_leaves: int
+    rejected_leaves: int
+    present_today: int
+    absent_today: int
+    leave_today: int

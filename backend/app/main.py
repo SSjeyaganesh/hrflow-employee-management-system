@@ -5,6 +5,7 @@ from app.auth.routes import router as auth_router
 from app.employees.routes import router as employee_router
 from app.leaves.routes import router as leave_router
 from app.attendance.routes import router as attendance_router
+from app.reports.routes import router as report_router
 from app.auth.dependencies import get_current_user
 
 app = FastAPI(
@@ -21,6 +22,7 @@ app.include_router(auth_router)
 app.include_router(employee_router)
 app.include_router(leave_router)
 app.include_router(attendance_router)
+app.include_router(report_router)
 
 
 @app.get("/")
