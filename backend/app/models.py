@@ -57,3 +57,17 @@ class LeaveRequest(Base):
 
     employee = relationship("Employee")
     reviewer = relationship("User")
+
+
+class Attendance(Base):
+    __tablename__ = "attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    check_in = Column(DateTime, nullable=True)
+    check_out = Column(DateTime, nullable=True)
+    status = Column(String, default="present")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    employee = relationship("Employee")

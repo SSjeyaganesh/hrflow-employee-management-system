@@ -80,3 +80,31 @@ class LeaveRequestOut(BaseModel):
 
 class LeaveReview(BaseModel):
     status: str
+
+
+class AttendanceCreate(BaseModel):
+    date: date
+    status: str = "present"
+
+
+class AttendanceOut(BaseModel):
+    id: int
+    employee_id: int
+    date: date
+    check_in: Optional[datetime] = None
+    check_out: Optional[datetime] = None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AttendanceSummary(BaseModel):
+    employee_id: int
+    month: int
+    year: int
+    total_days: int
+    present_days: int
+    absent_days: int
+    leave_days: int

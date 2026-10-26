@@ -4,6 +4,7 @@ from app import models, schemas
 from app.auth.routes import router as auth_router
 from app.employees.routes import router as employee_router
 from app.leaves.routes import router as leave_router
+from app.attendance.routes import router as attendance_router
 from app.auth.dependencies import get_current_user
 
 app = FastAPI(
@@ -19,6 +20,7 @@ def create_tables():
 app.include_router(auth_router)
 app.include_router(employee_router)
 app.include_router(leave_router)
+app.include_router(attendance_router)
 
 
 @app.get("/")
