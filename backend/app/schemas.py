@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 
@@ -54,3 +54,29 @@ class EmployeeUpdate(BaseModel):
     designation: Optional[str] = None
     joining_date: Optional[date] = None
     status: Optional[str] = None
+
+class LeaveRequestCreate(BaseModel):
+    leave_type: str
+    start_date: date
+    end_date: date
+    reason: str
+
+
+class LeaveRequestOut(BaseModel):
+    id: int
+    employee_id: int
+    leave_type: str
+    start_date: date
+    end_date: date
+    reason: str
+    status: str
+    reviewed_by: Optional[int] = None
+    reviewed_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LeaveReview(BaseModel):
+    status: str

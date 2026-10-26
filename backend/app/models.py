@@ -41,3 +41,19 @@ class Employee(Base):
 
     user = relationship("User", back_populates="employee")
     department = relationship("Department", back_populates="employees")
+class LeaveRequest(Base):
+    __tablename__ = "leave_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    leave_type = Column(String, nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    reason = Column(String, nullable=False)
+    status = Column(String, default="pending")
+    reviewed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    employee = relationship("Employee")
+    reviewer = relationship("User")
