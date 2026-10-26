@@ -1,16 +1,17 @@
-function App() {
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
+
+export default function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-cyan-400 to-blue-600">
-      <div className="bg-white p-10 rounded-2xl shadow-xl text-center">
-        <h1 className="text-4xl font-bold text-blue-900 mb-4">
-          HRFlow
-        </h1>
-        <p className="text-gray-600">
-          Tailwind CSS is working successfully.
-        </p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/employee" element={<EmployeeDashboard />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
