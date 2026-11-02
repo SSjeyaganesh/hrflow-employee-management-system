@@ -1,126 +1,86 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
+import EmployeeLayout from "../components/EmployeeLayout";
 
 export default function EmployeeDashboard() {
+  const [profile, setProfile] = useState(null);
   const [todayAttendance, setTodayAttendance] = useState(null);
-  const [attendanceMessage, setAttendanceMessage] = useState("");
-
-  const fetchTodayAttendance = async () => {
-    try {
-      const response = await api.get("/attendance/me");
-      const today = new Date().toISOString().split("T")[0];
-
-      const record = response.data.find(
-        (item) => item.date === today
-      );
-
-      setTodayAttendance(record || null);
-    } catch {
-      setAttendanceMessage("Unable to load today's attendance");
-    }
-  };
+  const [pendingLeaves, setPendingLeaves] = useState(0);
 
   useEffect(() => {
-    fetchTodayAttendance();
+    const loadData = async () => {
+      try {
+        const [profileRes, attendanceRes, leavesRes] = await Promise.all([
+          api.get("/employees/me"),
+          api.get("/attendance/me"),
+          api.get("/leaves/me"),
+        ]);
+
+        setProfile(profileRes.data);
+
+        const today = new Date().toISOString().split("T")[0];
+        const record = attendanceRes.data.find((item) => item.date === today);
+        setTodayAttendance(record || null);
+
+        const pending = leavesRes.data.filter(
+          (leave) => leave.status === "pending"
+        ).length;
+        setPendingLeaves(pending);
+      } catch {
+        // silent fail — dashboard still renders
+      }
+    };
+    loadData();
   }, []);
 
-  const markAttendance = async () => {
-    try {
-      await api.post("/attendance/mark", {
-        date: new Date().toISOString().split("T")[0],
-        status: "present",
-      });
-
-      setAttendanceMessage("Attendance marked successfully");
-      fetchTodayAttendance();
-    } catch (err) {
-      setAttendanceMessage(
-        err.response?.data?.detail || "Unable to mark attendance"
-      );
-    }
-  };
-
-  const markCheckout = async () => {
-    try {
-      await api.put("/attendance/checkout");
-
-      setAttendanceMessage("Checkout marked successfully");
-      fetchTodayAttendance();
-    } catch (err) {
-      setAttendanceMessage(
-        err.response?.data?.detail || "Unable to mark checkout"
-      );
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        Employee Dashboard
-      </h1>
+    <EmployeeLayout
+      title="Dashboard"
+      subtitle="Overview of your profile, attendance, and leaves"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-xl shadow">
+          <p className="text-sm text-gray-500">Welcome</p>
+          <p className="text-xl font-semibold text-gray-800">
+            {profile?.full_name || "Employee"}
+          </p>
+        </div>
 
-      <div className="bg-white p-6 rounded-xl shadow mb-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Welcome to HRFlow
-        </h2>
+        <div className="bg-white p-6 rounded-xl shadow">
+          <p className="text-sm text-gray-500">Today’s Attendance</p>
+          <p className="text-xl font-semibold text-gray-800">
+            {todayAttendance ? todayAttendance.status : "Not marked"}
+          </p>
+        </div>
 
-        <p className="text-gray-500">
-          You can mark attendance and apply for leave from here.
-        </p>
+        <div className="bg-white p-6 rounded-xl shadow">
+          <p className="text-sm text-gray-500">Pending Leaves</p>
+          <p className="text-xl font-semibold text-gray-800">
+            {pendingLeaves}
+          </p>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Today’s Attendance
+          Quick Actions
         </h2>
-
-        {attendanceMessage && (
-          <p className="mb-4 text-sm text-blue-600">
-            {attendanceMessage}
-          </p>
-        )}
-
-        {todayAttendance ? (
-          <div>
-            <p className="text-gray-700">
-              Status:{" "}
-              <span className="font-semibold capitalize">
-                {todayAttendance.status}
-              </span>
-            </p>
-
-            <p className="text-gray-700">
-              Check-in:{" "}
-              <span className="font-semibold">
-                {todayAttendance.check_in || "N/A"}
-              </span>
-            </p>
-
-            <p className="text-gray-700">
-              Check-out:{" "}
-              <span className="font-semibold">
-                {todayAttendance.check_out || "N/A"}
-              </span>
-            </p>
-
-            {!todayAttendance.check_out && (
-              <button
-                onClick={markCheckout}
-                className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-              >
-                Check Out
-              </button>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={markAttendance}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+        <div className="flex gap-4">
+          <Link
+            to="/employee/attendance"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
             Mark Attendance
-          </button>
-        )}
+          </Link>
+          <Link
+            to="/employee/leaves"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+          >
+            Apply for Leave
+          </Link>
+        </div>
       </div>
-    </div>
+    </EmployeeLayout>
   );
 }

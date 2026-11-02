@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import date, datetime
 from typing import Optional
 
@@ -26,10 +26,13 @@ class Token(BaseModel):
 
 class EmployeeCreate(BaseModel):
     full_name: str
+    email: EmailStr
+    password: str
     phone: Optional[str] = None
     department_id: Optional[int] = None
     designation: Optional[str] = None
     joining_date: Optional[date] = None
+    status: str = "active"
 
 
 class EmployeeOut(BaseModel):
@@ -54,6 +57,7 @@ class EmployeeUpdate(BaseModel):
     designation: Optional[str] = None
     joining_date: Optional[date] = None
     status: Optional[str] = None
+    password: Optional[str] = Field(default=None, min_length=1)
 
 class LeaveRequestCreate(BaseModel):
     leave_type: str
@@ -61,7 +65,10 @@ class LeaveRequestCreate(BaseModel):
     end_date: date
     reason: str
 
+class LeaveUpdate(BaseModel):
+    status: str
 
+    
 class LeaveRequestOut(BaseModel):
     id: int
     employee_id: int

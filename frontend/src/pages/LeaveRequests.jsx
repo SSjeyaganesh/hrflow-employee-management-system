@@ -37,8 +37,7 @@ export default function LeaveRequests() {
       setError("");
       setMessage("");
 
-      await api.put(`/leaves/${leaveId}`, { status });
-
+      await api.put(`/leaves/${leaveId}/review`, { status });
       setMessage(
         status === "approved"
           ? "Leave request approved successfully"

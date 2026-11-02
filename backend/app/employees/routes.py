@@ -1,9 +1,13 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models, schemas
 from app.auth.dependencies import get_current_user, admin_required
+from app.auth.security import hash_password
 
 router = APIRouter(
     prefix="/employees",
@@ -11,33 +15,67 @@ router = APIRouter(
 )
 
 
+def _validate_department(db: Session, department_id: Optional[int]) -> None:
+    if department_id is not None and not db.query(models.Department).filter(
+        models.Department.id == department_id
+    ).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Department not found",
+        )
+
+
 @router.post("/", response_model=schemas.EmployeeOut, status_code=201)
 def create_employee(
     employee_data: schemas.EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(admin_required)
+    current_user: models.User = Depends(admin_required),
 ):
-    existing = db.query(models.Employee).filter(
-        models.Employee.user_id == current_user.id
+    _validate_department(db, employee_data.department_id)
+
+    existing_user = db.query(models.User).filter(
+        func.lower(models.User.email) == employee_data.email.lower()
     ).first()
 
-    if existing:
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Employee profile already exists for this user"
+            detail="A user with this email already exists",
         )
 
+    new_user = models.User(
+        email=employee_data.email,
+        password_hash=hash_password(employee_data.password),
+        role="employee",
+    )
+
+    db.add(new_user)
+    db.flush()
+
     new_employee = models.Employee(
-        user_id=current_user.id,
-        **employee_data.model_dump()
+        user_id=new_user.id,
+        full_name=employee_data.full_name,
+        phone=employee_data.phone,
+        department_id=employee_data.department_id,
+        designation=employee_data.designation,
+        joining_date=employee_data.joining_date,
+        status=employee_data.status,
     )
 
     db.add(new_employee)
-    db.commit()
+
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print("EMPLOYEE CREATION ERROR:", e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Employee creation failed: {e}",
+        )
+
     db.refresh(new_employee)
-
     return new_employee
-
 
 @router.get("/", response_model=list[schemas.EmployeeOut])
 def get_all_employees(
@@ -120,6 +158,17 @@ def update_employee(
         )
 
     update_data = employee_data.model_dump(exclude_unset=True)
+    if "department_id" in update_data:
+        _validate_department(db, update_data["department_id"])
+
+    new_password = update_data.pop("password", None)
+    if new_password is not None:
+        if employee.user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Employee account not found",
+            )
+        employee.user.password_hash = hash_password(new_password)
 
     for field, value in update_data.items():
         setattr(employee, field, value)

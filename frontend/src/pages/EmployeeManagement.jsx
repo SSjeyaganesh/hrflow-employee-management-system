@@ -5,6 +5,8 @@ import api from "../services/api";
 
 const emptyForm = {
   full_name: "",
+  email: "",
+  password: "",
   phone: "",
   department_id: "",
   designation: "",
@@ -82,37 +84,50 @@ export default function EmployeeManagement() {
     setMessage("");
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-    setMessage("");
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  setError("");
+  setMessage("");
 
-    try {
-      const payload = {
-        full_name: form.full_name,
-        phone: form.phone || null,
-        department_id: form.department_id ? Number(form.department_id) : null,
-        designation: form.designation || null,
-        joining_date: form.joining_date || null,
-        status: form.status,
-      };
+  try {
+    const payload = {
+      full_name: form.full_name,
+      phone: form.phone || null,
+      department_id: form.department_id ? Number(form.department_id) : null,
+      designation: form.designation || null,
+      joining_date: form.joining_date || null,
+      status: form.status,
+    };
 
-      if (editingId) {
-        await api.put(`/employees/${editingId}`, payload);
-        setMessage("Employee updated successfully");
-      } else {
-        await api.post("/employees/", payload);
-        setMessage("Employee created successfully");
-      }
-
-      setShowForm(false);
-      setEditingId(null);
-      setForm(emptyForm);
-      fetchEmployees();
-    } catch {
-      setError("Unable to save employee");
+    if (!editingId) {
+      payload.email = form.email;
+      payload.password = form.password;
+    } else if (form.password) {
+      payload.password = form.password;
     }
-  };
+
+    if (editingId) {
+      await api.put(`/employees/${editingId}`, payload);
+      setMessage(
+        payload.password
+          ? "Employee updated and login password reset successfully"
+          : "Employee updated successfully"
+      );
+    } else {
+      await api.post("/employees/", payload);
+      setMessage("Employee created successfully");
+    }
+
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyForm);
+    fetchEmployees();
+  } catch (err) {
+    setError(
+      err.response?.data?.detail || "Unable to save employee"
+    );
+  }
+};
 
   const handleDelete = async (employeeId) => {
     const confirmed = window.confirm(
@@ -130,6 +145,24 @@ export default function EmployeeManagement() {
     }
   };
 
+
+  const generatePassword = () => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%";
+
+  let password = "";
+
+  for (let i = 0; i < 12; i++) {
+    password += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+
+  setForm({
+    ...form,
+    password,
+  });
+};
   return (
     <AdminLayout
       title="Employee Management"
@@ -193,7 +226,62 @@ export default function EmployeeManagement() {
               className="px-4 py-3 border rounded-lg"
               required
             />
-
+            {!editingId && (
+              <>
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Employee Email"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="px-4 py-3 border rounded-lg"
+                  required
+                />
+                <div className="flex gap-2">
+                  <input
+                    name="password"
+                    type="text"
+                    placeholder="Login Password"
+                    value={form.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border rounded-lg"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={generatePassword}
+                    className="bg-slate-900 text-white px-4 rounded-lg hover:bg-slate-800 whitespace-nowrap"
+                  >
+                    Generate
+                  </button>
+                </div>
+              </>
+            )}
+            {editingId && (
+              <div className="flex flex-col gap-1">
+                <label htmlFor="password" className="text-sm text-gray-600">
+                  Reset login password (leave blank to keep current password)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="password"
+                    name="password"
+                    type="text"
+                    placeholder="New login password"
+                    value={form.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={generatePassword}
+                    className="bg-slate-900 text-white px-4 rounded-lg hover:bg-slate-800 whitespace-nowrap"
+                  >
+                    Generate
+                  </button>
+                </div>
+              </div>
+            )}
             <input
               name="phone"
               placeholder="Phone"

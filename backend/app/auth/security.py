@@ -4,6 +4,7 @@ from jose import jwt
 import bcrypt
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 SECRET_KEY = os.getenv("JWT_SECRET")
