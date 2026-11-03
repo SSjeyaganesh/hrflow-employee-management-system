@@ -1,12 +1,8 @@
 import axios from "axios";
 
-const apiBaseUrl =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://127.0.0.1:8000" : undefined);
-
-if (!apiBaseUrl) {
-  throw new Error("VITE_API_URL must be configured for production.");
-}
+const apiBaseUrl = import.meta.env.DEV
+  ? "http://127.0.0.1:8000"
+  : "https://hrflow-employee-management-system.onrender.com";
 
 const api = axios.create({
   baseURL: apiBaseUrl.replace(/\/+$/, ""),
